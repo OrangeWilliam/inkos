@@ -20,7 +20,7 @@
 
 Open-source CLI agent that autonomously writes, audits, and revises novels — with human review gates that keep you in control.
 
-**Native English support** — 10 built-in English genre profiles (LitRPG, Progression Fantasy, Isekai, Cultivation, and more) with dedicated pacing rules, fatigue word lists, and audit dimensions. Set `--lang en` and go.
+**Native English support** — 10 built-in English genre profiles with dedicated pacing rules, fatigue word lists, and audit dimensions. See [English Genre Profiles](#english-genre-profiles) for details.
 
 ## Quick Start
 
