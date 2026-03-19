@@ -23,7 +23,7 @@ configCommand
 
       const KNOWN_KEYS = new Set([
         "llm.provider", "llm.baseUrl", "llm.model", "llm.temperature",
-        "llm.maxTokens", "llm.thinkingBudget", "llm.apiFormat", "llm.stream",
+        "llm.maxTokens", "llm.thinkingBudget", "llm.reasoningEffort", "llm.apiFormat", "llm.stream",
         "daemon.schedule.radarCron", "daemon.schedule.writeCron",
         "daemon.maxConcurrentBooks", "daemon.chaptersPerCycle",
         "daemon.retryDelayMs", "daemon.cooldownAfterChapterMs",

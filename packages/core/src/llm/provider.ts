@@ -79,6 +79,7 @@ export interface LLMClient {
     readonly temperature: number;
     readonly maxTokens: number;
     readonly thinkingBudget: number;
+    readonly reasoningEffort?: "low" | "medium" | "high";
   };
 }
 
@@ -114,6 +115,7 @@ export function createLLMClient(config: LLMConfig): LLMClient {
     temperature: config.temperature ?? 0.7,
     maxTokens: config.maxTokens ?? 8192,
     thinkingBudget: config.thinkingBudget ?? 0,
+    reasoningEffort: config.reasoningEffort,
   };
 
   const apiFormat = config.apiFormat ?? "chat";
@@ -218,6 +220,7 @@ export async function chatCompletion(
   const resolved = {
     temperature: options?.temperature ?? client.defaults.temperature,
     maxTokens: options?.maxTokens ?? client.defaults.maxTokens,
+    reasoningEffort: client.defaults.reasoningEffort,
   };
   const onStreamProgress = options?.onStreamProgress;
   const errorCtx = { baseUrl: client._openai?.baseURL ?? "(anthropic)", model };
@@ -321,21 +324,22 @@ async function chatCompletionOpenAIChat(
   client: OpenAI,
   model: string,
   messages: ReadonlyArray<LLMMessage>,
-  options: { readonly temperature: number; readonly maxTokens: number },
+  options: { readonly temperature: number; readonly maxTokens: number; readonly reasoningEffort?: "low" | "medium" | "high" },
   webSearch?: boolean,
   onStreamProgress?: OnStreamProgress,
 ): Promise<LLMResponse> {
-  const stream = await client.chat.completions.create({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const createParams: any = {
     model,
-    messages: messages.map((m) => ({
-      role: m.role,
-      content: m.content,
-    })),
+    messages: messages.map((m) => ({ role: m.role, content: m.content })),
     temperature: options.temperature,
     max_tokens: options.maxTokens,
     stream: true,
     ...(webSearch ? { web_search_options: { search_context_size: "medium" as const } } : {}),
-  });
+    ...(options.reasoningEffort ? { reasoning_effort: options.reasoningEffort } : {}),
+  };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const stream = await client.chat.completions.create(createParams) as any;
 
   const chunks: string[] = [];
   let inputTokens = 0;
@@ -382,16 +386,19 @@ async function chatCompletionOpenAIChatSync(
   client: OpenAI,
   model: string,
   messages: ReadonlyArray<LLMMessage>,
-  options: { readonly temperature: number; readonly maxTokens: number },
+  options: { readonly temperature: number; readonly maxTokens: number; readonly reasoningEffort?: "low" | "medium" | "high" },
   _webSearch?: boolean,
 ): Promise<LLMResponse> {
-  const response = await client.chat.completions.create({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const syncParams: any = {
     model,
     messages: messages.map((m) => ({ role: m.role, content: m.content })),
     temperature: options.temperature,
     max_tokens: options.maxTokens,
     stream: false,
-  });
+    ...(options.reasoningEffort ? { reasoning_effort: options.reasoningEffort } : {}),
+  };
+  const response = await client.chat.completions.create(syncParams);
 
   const content = response.choices[0]?.message?.content ?? "";
   if (!content) throw new Error("LLM returned empty response");
